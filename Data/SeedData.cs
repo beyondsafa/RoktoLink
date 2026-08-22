@@ -73,7 +73,7 @@ namespace RoktoLink.Data
             }
             else
             {
-                donor1 = await userManager.FindByEmailAsync("donor@roktolink.local");
+                donor1 = (await userManager.FindByEmailAsync("donor@roktolink.local"))!;
             }
 
             ApplicationUser donor2 = null!;
@@ -95,7 +95,7 @@ namespace RoktoLink.Data
             }
             else
             {
-                donor2 = await userManager.FindByEmailAsync("donor2@roktolink.local");
+                donor2 = (await userManager.FindByEmailAsync("donor2@roktolink.local"))!;
             }
 
             if (!context.DonorProfiles.Any())
