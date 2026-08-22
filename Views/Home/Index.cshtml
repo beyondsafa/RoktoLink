@@ -1,28 +1,85 @@
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Welcome";
 }
 
-<div class="text-center mt-5">
-    <h1 class="display-4 text-danger fw-bold">RoktoLink</h1>
-    <p class="lead">Connecting heroes to those in need. A structured blood requisition platform.</p>
+<!-- Hero Section -->
+<div class="p-5 mb-4 bg-light rounded-3 shadow-sm border border-danger border-opacity-25 mt-4">
+    <div class="container-fluid py-5 text-center">
+        <h1 class="display-3 fw-bold text-danger"><i class="bi bi-droplet-fill"></i> RoktoLink</h1>
+        <p class="col-md-8 mx-auto fs-4 text-muted">
+            Connecting heroes to those in urgent need. A structured, transparent, and efficient blood requisition platform for Bangladesh.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            @if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-danger btn-lg px-4 gap-3">Become a Donor</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            }
+            else
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-danger btn-lg px-4 gap-3">Dashboard</a>
+            }
+        </div>
+    </div>
 </div>
 
-<div class="row mt-5 text-center">
-    <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-danger h-100">
+<!-- Live Stats -->
+<div class="row row-cols-1 row-cols-md-3 g-4 text-center my-5">
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title text-danger"><i class="bi bi-droplet-half"></i> Open Requests</h5>
-                <h2 class="display-1 fw-bold">@ViewBag.OpenRequests</h2>
-                <p class="text-muted">Urgent blood requests waiting for donors</p>
+                <h1 class="display-4 fw-bold text-danger">@ViewBag.OpenRequests</h1>
+                <h5 class="card-title text-muted">Open Urgent Requests</h5>
             </div>
         </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-success h-100">
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title text-success"><i class="bi bi-people"></i> Registered Donors</h5>
-                <h2 class="display-1 fw-bold">@ViewBag.TotalDonors</h2>
-                <p class="text-muted">Heroes ready to save lives</p>
+                <h1 class="display-4 fw-bold text-success">@ViewBag.TotalDonors</h1>
+                <h5 class="card-title text-muted">Registered Heroes</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h1 class="display-4 fw-bold text-primary">@ViewBag.TotalDonations</h1>
+                <h5 class="card-title text-muted">Total Life-saving Donations</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works -->
+<div class="container px-4 py-5" id="how-it-works">
+    <h2 class="pb-2 border-bottom text-center mb-5">How RoktoLink Works</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="col d-flex align-items-start text-center flex-column">
+            <div class="icon-square bg-light text-danger flex-shrink-0 me-3 mb-3 p-3 rounded-circle mx-auto border border-danger">
+                <h2>1</h2>
+            </div>
+            <div>
+                <h4 class="fw-bold">Request Created</h4>
+                <p>Hospital coordinators post urgent blood requests specifying blood type, units needed, and urgency level.</p>
+            </div>
+        </div>
+        <div class="col d-flex align-items-start text-center flex-column">
+            <div class="icon-square bg-light text-success flex-shrink-0 me-3 mb-3 p-3 rounded-circle mx-auto border border-success">
+                <h2>2</h2>
+            </div>
+            <div>
+                <h4 class="fw-bold">Donors Matched</h4>
+                <p>Eligible donors with matching blood types receive notifications and can confirm their availability immediately.</p>
+            </div>
+        </div>
+        <div class="col d-flex align-items-start text-center flex-column">
+            <div class="icon-square bg-light text-primary flex-shrink-0 me-3 mb-3 p-3 rounded-circle mx-auto border border-primary">
+                <h2>3</h2>
+            </div>
+            <div>
+                <h4 class="fw-bold">Donation Completed</h4>
+                <p>Donors arrive at the hospital, complete the donation, and coordinators log the fulfillment to track activity.</p>
             </div>
         </div>
     </div>

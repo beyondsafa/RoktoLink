@@ -1,0 +1,78 @@
+@model IEnumerable<RoktoLink.Models.BloodRequest>
+
+@{
+    ViewData["Title"] = "Blood Requests";
+}
+
+<h2 class="mb-4">Blood Requests</h2>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Blood Type</label>
+                <select name="bloodType" class="form-select">
+                    <option value="">All</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">District</label>
+                <input type="text" name="district" class="form-control" placeholder="Search District" value="@ViewBag.District" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Urgency</label>
+                <select name="urgency" class="form-select">
+                    <option value="">All</option>
+                    <option value="0">Normal</option>
+                    <option value="1">Urgent</option>
+                    <option value="2">Critical</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (User.IsInRole("Coordinator"))
+{
+    <div class="mb-3">
+        <a asp-action="Create" class="btn btn-success">Create New Request</a>
+    </div>
+}
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm @(item.UrgencyLevel == RoktoLink.Models.Enums.UrgencyLevel.Critical ? "border-danger" : (item.UrgencyLevel == RoktoLink.Models.Enums.UrgencyLevel.Urgent ? "border-warning" : "border-info"))">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-title text-danger">@item.BloodType</h5>
+                        <span class="badge @(item.UrgencyLevel == RoktoLink.Models.Enums.UrgencyLevel.Critical ? "bg-danger" : (item.UrgencyLevel == RoktoLink.Models.Enums.UrgencyLevel.Urgent ? "bg-warning text-dark" : "bg-info text-dark"))">
+                            @item.UrgencyLevel
+                        </span>
+                    </div>
+                    <h6 class="card-subtitle mb-2 text-muted">@item.Hospital, @item.District</h6>
+                    <p class="card-text">
+                        <strong>Units Needed:</strong> @item.UnitsNeeded<br/>
+                        <strong>Deadline:</strong> @item.Deadline.ToShortDateString()<br/>
+                        <strong>Status:</strong> @item.Status
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

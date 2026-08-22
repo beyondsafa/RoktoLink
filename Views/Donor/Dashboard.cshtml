@@ -1,0 +1,130 @@
+@model IEnumerable<RoktoLink.Models.BloodRequest>
+
+@{
+    ViewData["Title"] = "Donor Dashboard";
+    var profile = ViewBag.Profile as RoktoLink.Models.DonorProfile;
+    var history = ViewBag.DonationHistory as IEnumerable<RoktoLink.Models.DonationRecord>;
+    
+    bool isEligible = false;
+    int daysRemaining = 0;
+    
+    if (profile != null)
+    {
+        if (profile.LastDonationDate == null)
+        {
+            isEligible = profile.IsAvailable;
+        }
+        else
+        {
+            var nextEligibleDate = profile.LastDonationDate.Value.AddDays(90);
+            daysRemaining = (nextEligibleDate - DateTime.UtcNow).Days;
+            isEligible = daysRemaining <= 0 && profile.IsAvailable;
+        }
+    }
+}
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <!-- Profile Summary -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">My Profile</h5>
+                <hr />
+                <p><strong>Blood Type:</strong> <span class="badge bg-danger fs-6">@(profile?.BloodType ?? "Not Set")</span></p>
+                <p><strong>District:</strong> @profile?.District</p>
+                <p><strong>Total Donations:</strong> @profile?.TotalDonations</p>
+                
+                <p><strong>Status:</strong> 
+                    @if (isEligible)
+                    {
+                        <span class="badge bg-success">Eligible to Donate</span>
+                    }
+                    else if (profile != null && !profile.IsAvailable)
+                    {
+                        <span class="badge bg-secondary">Not Available</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Not Yet Eligible (@daysRemaining days remaining)</span>
+                    }
+                </p>
+                
+                <a asp-action="Profile" class="btn btn-outline-primary btn-sm w-100 mt-2">Edit Profile</a>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Donation History</h5>
+                <hr />
+                @if (history != null && history.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach(var record in history)
+                        {
+                            <li class="list-group-item px-0">
+                                <div class="d-flex justify-content-between">
+                                    <span>@record.DonationDate.ToShortDateString()</span>
+                                    <span>@record.UnitsGiven unit(s)</span>
+                                </div>
+                                <small class="text-muted">Req #@record.RequestId - @(record.ConfirmedByCoordinator ? "Confirmed" : "Pending")</small>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No donation history yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <!-- Open Requests -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Urgent Requests (Matching Your Blood Type)</h5>
+                <hr />
+                @if (Model != null && Model.Any())
+                {
+                    <div class="row row-cols-1 g-3">
+                        @foreach (var req in Model)
+                        {
+                            <div class="col">
+                                <div class="card border-danger h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="card-title text-danger mb-0">@req.Hospital, @req.District</h6>
+                                            <span class="badge bg-danger">@req.UrgencyLevel</span>
+                                        </div>
+                                        <p class="mb-1"><strong>Units Needed:</strong> @req.UnitsNeeded</p>
+                                        <p class="mb-1"><strong>Deadline:</strong> @req.Deadline.ToShortDateString()</p>
+                                        <p class="mb-3 text-muted small">Requested by Coordinator</p>
+                                        
+                                        @if (isEligible)
+                                        {
+                                            <form asp-action="Confirm" method="post" class="d-inline">
+                                                <input type="hidden" name="requestId" value="@req.Id" />
+                                                <button type="submit" class="btn btn-danger btn-sm w-100">Confirm Availability</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-secondary btn-sm w-100" disabled>Not Eligible to Donate</button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No open requests matching your blood type right now.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

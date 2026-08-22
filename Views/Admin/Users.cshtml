@@ -1,0 +1,73 @@
+@model IEnumerable<RoktoLink.Models.ApplicationUser>
+
+@{
+    ViewData["Title"] = "User Management";
+    var userRoles = ViewBag.UserRoles as Dictionary<string, string>;
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<h2 class="mb-4">User Management</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>District</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        var role = userRoles?[user.Id] ?? "Unknown";
+                        <tr>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@user.District</td>
+                            <td>
+                                <span class="badge bg-@(role == "Admin" ? "danger" : role == "Coordinator" ? "warning text-dark" : "info text-dark")">@role</span>
+                            </td>
+                            <td>
+                                <form asp-action="ChangeRole" method="post" class="d-flex gap-2">
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <select name="newRole" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="Donor" selected="@(role == "Donor")">Donor</option>
+                                        <option value="Coordinator" selected="@(role == "Coordinator")">Coordinator</option>
+                                        <option value="Admin" selected="@(role == "Admin")">Admin</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">Change</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Users" asp-route-page="@(currentPage - 1)">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(currentPage == i ? "active" : "")">
+                            <a class="page-link" asp-action="Users" asp-route-page="@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Users" asp-route-page="@(currentPage + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

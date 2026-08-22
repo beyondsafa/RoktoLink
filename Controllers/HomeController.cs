@@ -22,9 +22,11 @@ namespace RoktoLink.Controllers
         {
             var openRequests = await _context.BloodRequests.CountAsync(r => r.Status == RequestStatus.Open);
             var totalDonors = await _context.DonorProfiles.CountAsync();
+            var totalDonations = await _context.DonationRecords.CountAsync();
 
             ViewBag.OpenRequests = openRequests;
             ViewBag.TotalDonors = totalDonors;
+            ViewBag.TotalDonations = totalDonations;
 
             return View();
         }

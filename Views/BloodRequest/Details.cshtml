@@ -1,0 +1,116 @@
+@model RoktoLink.Models.BloodRequest
+
+@{
+    ViewData["Title"] = "Request Details";
+    var eligibleDonors = ViewBag.EligibleDonors as IEnumerable<RoktoLink.Models.DonorProfile>;
+}
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Request #@Model.Id</h4>
+                <span class="badge bg-light text-dark fs-6">@Model.Status</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Patient Name:</div>
+                    <div class="col-sm-8">@Model.PatientName</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Blood Type:</div>
+                    <div class="col-sm-8"><span class="badge bg-danger fs-6">@Model.BloodType</span></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Units Needed:</div>
+                    <div class="col-sm-8">@Model.UnitsNeeded</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Hospital:</div>
+                    <div class="col-sm-8">@Model.Hospital, @Model.District</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Urgency Level:</div>
+                    <div class="col-sm-8">
+                        <span class="badge @(Model.UrgencyLevel == RoktoLink.Models.Enums.UrgencyLevel.Critical ? "bg-danger" : (Model.UrgencyLevel == RoktoLink.Models.Enums.UrgencyLevel.Urgent ? "bg-warning text-dark" : "bg-info text-dark"))">
+                            @Model.UrgencyLevel
+                        </span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Deadline:</div>
+                    <div class="col-sm-8">@Model.Deadline.ToString("g")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 fw-bold">Notes:</div>
+                    <div class="col-sm-8">@Model.Notes</div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    @if (User.IsInRole("Donor") && Model.Status == RoktoLink.Models.Enums.RequestStatus.Open)
+                    {
+                        <form asp-controller="Donor" asp-action="Confirm" method="post">
+                            <input type="hidden" name="requestId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-danger">Confirm I Can Donate</button>
+                        </form>
+                    }
+                    
+                    @if (User.IsInRole("Coordinator"))
+                    {
+                        @if (Model.Status == RoktoLink.Models.Enums.RequestStatus.Open)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+                            
+                            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this request?');">Cancel Request</button>
+                            </form>
+                        }
+                    }
+                    
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Coordinator"))
+    {
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Mark Fulfilled</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Status == RoktoLink.Models.Enums.RequestStatus.Open || Model.Status == RoktoLink.Models.Enums.RequestStatus.InProgress)
+                    {
+                        <form asp-action="Fulfill" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label class="form-label">Select Donor</label>
+                                <select name="donorProfileId" class="form-select" required>
+                                    <option value="">-- Choose Donor --</option>
+                                    @if (eligibleDonors != null)
+                                    {
+                                        foreach (var d in eligibleDonors)
+                                        {
+                                            <option value="@d.Id">@d.User?.FullName (@d.BloodType) - @d.District</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Units Given</label>
+                                <input type="number" name="unitsGiven" class="form-control" min="1" max="@Model.UnitsNeeded" value="1" required />
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Fulfill Request</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">This request is @Model.Status.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

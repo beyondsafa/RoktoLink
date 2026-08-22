@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
+    <div class="col">
+        <div class="card bg-primary text-white shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Total Donors</h6>
+                <h2 class="display-4 fw-bold mb-0">@ViewBag.TotalDonors</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-warning text-dark shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Open Requests</h6>
+                <h2 class="display-4 fw-bold mb-0">@ViewBag.OpenRequests</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-success text-white shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Fulfilled This Month</h6>
+                <h2 class="display-4 fw-bold mb-0">@ViewBag.FulfilledThisMonth</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-danger text-white shadow-sm h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title text-uppercase">Critical Open</h6>
+                <h2 class="display-4 fw-bold mb-0">@ViewBag.CriticalOpen</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <h5 class="card-title mb-3">User Management</h5>
+                <p class="text-muted">Manage roles and profiles of all registered users in the system.</p>
+                <a asp-action="Users" class="btn btn-outline-primary mt-auto">Go to Users</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <h5 class="card-title mb-3">System Reports</h5>
+                <p class="text-muted">View insights on donation activity, blood availability, and fulfillment logs.</p>
+                <a asp-action="Reports" class="btn btn-outline-success mt-auto">Go to Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
