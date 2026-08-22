@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4 text-danger fw-bold">RoktoLink</h1>
+    <p class="lead">Connecting heroes to those in need. A structured blood requisition platform.</p>
+</div>
+
+<div class="row mt-5 text-center">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-danger h-100">
+            <div class="card-body">
+                <h5 class="card-title text-danger"><i class="bi bi-droplet-half"></i> Open Requests</h5>
+                <h2 class="display-1 fw-bold">@ViewBag.OpenRequests</h2>
+                <p class="text-muted">Urgent blood requests waiting for donors</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-success h-100">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="bi bi-people"></i> Registered Donors</h5>
+                <h2 class="display-1 fw-bold">@ViewBag.TotalDonors</h2>
+                <p class="text-muted">Heroes ready to save lives</p>
+            </div>
+        </div>
+    </div>
+</div>
