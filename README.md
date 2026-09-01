@@ -20,17 +20,24 @@ RoktoLink (Rokto = Bengali for blood) is a Blood Requisition and Donor Coordinat
 
 ## How to Run
 
-1. Clone the repository and navigate to the root directory.
-2. Ensure you have the .NET SDK installed.
-3. Apply database migrations:
+1. Clone the repository and navigate to the root directory:
    ```bash
-   dotnet ef database update
+   cd RoktoLink
    ```
-4. Run the application:
+2. Run the automated test suite:
+   ```bash
+   dotnet test
+   ```
+3. Run the web application:
    ```bash
    dotnet run
    ```
-5. Open your browser and go to `https://localhost:5001` (or the port specified in your console output).
+4. Open your browser and navigate to `http://localhost:5000` (or `https://localhost:5001`).
+
+## Documentation
+
+For a comprehensive academic breakdown covering the architecture, ERD, medical compatibility algorithm, and rubric justification, refer to:
+- [`PROJECT_REPORT.md`](PROJECT_REPORT.md)
 
 ## Seed Credentials
 
