@@ -130,6 +130,16 @@ namespace RoktoLink.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Confirm(int requestId)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Challenge();
+
+            var profile = await _context.DonorProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (profile == null)
+            {
+                TempData["Error"] = "Please complete your donor profile first.";
+                return RedirectToAction(nameof(Profile));
+            }
+
             var request = await _context.BloodRequests.FindAsync(requestId);
             if (request == null || request.Status != RequestStatus.Open)
             {
@@ -137,10 +147,23 @@ namespace RoktoLink.Controllers
                 return RedirectToAction(nameof(Dashboard));
             }
 
-            request.Status = RequestStatus.InProgress;
-            await _context.SaveChangesAsync();
+            var existingScreening = await _context.MedicalScreenings
+                .FirstOrDefaultAsync(s => s.RequestId == requestId && s.DonorId == profile.Id);
 
-            TempData["Success"] = "You have confirmed your availability for this request! The coordinator has been notified.";
+            if (existingScreening == null)
+            {
+                var screening = new MedicalScreening
+                {
+                    RequestId = request.Id,
+                    DonorId = profile.Id,
+                    Status = ScreeningStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.MedicalScreenings.Add(screening);
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = "You have confirmed your availability. Your profile is in the Medical Triage Queue for doctor clearance before contact details are shared with the coordinator.";
             return RedirectToAction(nameof(Dashboard));
         }
     }

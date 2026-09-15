@@ -3,31 +3,33 @@
 @{
     ViewData["Title"] = "Request Details";
     var eligibleDonors = ViewBag.EligibleDonors as IEnumerable<RoktoLink.Models.DonorProfile>;
+    var screenings = ViewBag.MedicalScreenings as IEnumerable<RoktoLink.Models.MedicalScreening>;
 }
 
 <div class="row mt-4">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
+    <div class="col-lg-8">
+        <!-- Requisition Card -->
+        <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Request #@Model.Id</h4>
+                <h4 class="mb-0">Requisition #@Model.Id</h4>
                 <span class="badge bg-light text-dark fs-6">@Model.Status</span>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-sm-4 fw-bold">Patient Name:</div>
+                    <div class="col-sm-4 fw-bold">Patient / Case:</div>
                     <div class="col-sm-8">@Model.PatientName</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4 fw-bold">Blood Type:</div>
+                    <div class="col-sm-4 fw-bold">Required Blood Type:</div>
                     <div class="col-sm-8"><span class="badge bg-danger fs-6">@Model.BloodType</span></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-sm-4 fw-bold">Units Needed:</div>
-                    <div class="col-sm-8">@Model.UnitsNeeded</div>
+                    <div class="col-sm-8">@Model.UnitsNeeded unit(s)</div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-sm-4 fw-bold">Hospital:</div>
-                    <div class="col-sm-8">@Model.Hospital, @Model.District</div>
+                    <div class="col-sm-8">@Model.Hospital (@Model.District)</div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-sm-4 fw-bold">Urgency Level:</div>
@@ -39,14 +41,14 @@
                 </div>
                 <div class="row mb-3">
                     <div class="col-sm-4 fw-bold">Deadline:</div>
-                    <div class="col-sm-8">@Model.Deadline.ToString("g")</div>
+                    <div class="col-sm-8">@Model.Deadline.ToString("f")</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4 fw-bold">Notes:</div>
+                    <div class="col-sm-4 fw-bold">Clinical Notes:</div>
                     <div class="col-sm-8">@Model.Notes</div>
                 </div>
 
-                <div class="d-flex gap-2 mt-4">
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
                     @if (User.IsInRole("Donor") && Model.Status == RoktoLink.Models.Enums.RequestStatus.Open)
                     {
                         <form asp-controller="Donor" asp-action="Confirm" method="post">
@@ -54,28 +56,115 @@
                             <button type="submit" class="btn btn-danger">Confirm I Can Donate</button>
                         </form>
                     }
-                    
+
+                    @if (User.IsInRole("Doctor") && (Model.Status == RoktoLink.Models.Enums.RequestStatus.Open || Model.Status == RoktoLink.Models.Enums.RequestStatus.InProgress))
+                    {
+                        <a asp-controller="Doctor" asp-action="TriageQueue" class="btn btn-outline-primary">
+                            <i class="bi bi-clipboard2-pulse"></i> Open Doctor Triage
+                        </a>
+                    }
+
                     @if (User.IsInRole("Coordinator"))
                     {
                         @if (Model.Status == RoktoLink.Models.Enums.RequestStatus.Open)
                         {
                             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
-                            
+
                             <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this request?');">Cancel Request</button>
                             </form>
                         }
                     }
-                    
-                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+
+                    <a asp-action="Index" class="btn btn-secondary">Back to Board</a>
                 </div>
+            </div>
+        </div>
+
+        <!-- Volunteering Donors & Medical Clearance Gate -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i> Medical Clearance & Contact Disclosure Gate</h5>
+                <small class="text-white-50">BMDC Doctor Verification Required</small>
+            </div>
+            <div class="card-body">
+                @if (screenings != null && screenings.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var sc in screenings)
+                        {
+                            <div class="list-group-item p-3 border rounded mb-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">@sc.Donor?.User?.FullName <span class="badge bg-danger ms-1">@sc.Donor?.BloodType</span></h6>
+                                        <small class="text-muted"><i class="bi bi-geo-alt"></i> @sc.Donor?.District</small>
+                                    </div>
+                                    <div>
+                                        @if (sc.Status == RoktoLink.Models.Enums.ScreeningStatus.Approved)
+                                        {
+                                            <span class="badge bg-success p-2"><i class="bi bi-patch-check-fill me-1"></i> Medically Cleared</span>
+                                        }
+                                        else if (sc.Status == RoktoLink.Models.Enums.ScreeningStatus.Rejected)
+                                        {
+                                            <span class="badge bg-danger p-2"><i class="bi bi-x-circle-fill me-1"></i> Contraindicated</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark p-2"><i class="bi bi-hourglass-split me-1"></i> Awaiting Doctor Triage</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Contact Information Access Control -->
+                                <div class="p-2 border rounded bg-white mt-2">
+                                    @if (sc.Status == RoktoLink.Models.Enums.ScreeningStatus.Approved)
+                                    {
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-sm-7">
+                                                <span class="text-success fw-bold small d-block"><i class="bi bi-unlock-fill me-1"></i> Contact Unlocked (Cleared by Doctor):</span>
+                                                <span class="small font-monospace">@sc.Donor?.User?.Email</span>
+                                            </div>
+                                            <div class="col-sm-5 text-sm-end">
+                                                <small class="text-muted d-block">Screened by Dr. @(sc.Doctor?.User?.FullName ?? "Volunteer Doctor")</small>
+                                                <span class="badge bg-secondary font-monospace">BMDC: @(sc.Doctor?.BMDCRegistrationNumber ?? "Verified")</span>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted small">
+                                                <i class="bi bi-lock-fill text-danger me-1"></i> Contact Protected: <code>01712-****68</code>
+                                            </span>
+                                            <small class="text-muted">Unlocked only after clinical triage</small>
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (User.IsInRole("Doctor") && sc.Status == RoktoLink.Models.Enums.ScreeningStatus.Pending)
+                                {
+                                    <div class="mt-2 text-end">
+                                        <a asp-controller="Doctor" asp-action="Screen" asp-route-id="@sc.Id" class="btn btn-sm btn-danger">
+                                            Perform Medical Screening
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0 small">No donors have volunteered for this requisition yet.</p>
+                }
             </div>
         </div>
     </div>
 
+    <!-- Fulfillment Panel (Coordinator Only) -->
     @if (User.IsInRole("Coordinator"))
     {
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">Mark Fulfilled</h5>
@@ -86,7 +175,7 @@
                         <form asp-action="Fulfill" method="post">
                             <input type="hidden" name="id" value="@Model.Id" />
                             <div class="mb-3">
-                                <label class="form-label">Select Donor</label>
+                                <label class="form-label fw-semibold">Select Medically Cleared Donor</label>
                                 <select name="donorProfileId" class="form-select" required>
                                     <option value="">-- Choose Donor --</option>
                                     @if (eligibleDonors != null)
@@ -99,15 +188,15 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Units Given</label>
+                                <label class="form-label fw-semibold">Units Donated</label>
                                 <input type="number" name="unitsGiven" class="form-control" min="1" max="@Model.UnitsNeeded" value="1" required />
                             </div>
-                            <button type="submit" class="btn btn-success w-100">Fulfill Request</button>
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Confirm Donation Fulfillment</button>
                         </form>
                     }
                     else
                     {
-                        <p class="text-muted text-center mb-0">This request is @Model.Status.</p>
+                        <p class="text-muted text-center mb-0">This requisition is @Model.Status.</p>
                     }
                 </div>
             </div>

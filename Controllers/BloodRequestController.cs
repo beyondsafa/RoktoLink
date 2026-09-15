@@ -72,12 +72,27 @@ namespace RoktoLink.Controllers
 
             ViewBag.EligibleDonors = eligibleDonors;
 
+            var screenings = await _context.MedicalScreenings
+                .Include(s => s.Doctor).ThenInclude(doc => doc!.User)
+                .Where(s => s.RequestId == id)
+                .ToListAsync();
+
+            ViewBag.MedicalScreenings = screenings;
+
             return View(request);
         }
 
         [Authorize(Roles = "Coordinator")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var profile = await _context.CoordinatorProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (profile != null && !profile.IsApproved)
+            {
+                TempData["Error"] = "Your Hospital Coordinator account is pending administrative accreditation and approval. You cannot publish requisitions yet.";
+                return RedirectToAction("Index", "Home");
+            }
+
             return View();
         }
 
@@ -86,9 +101,17 @@ namespace RoktoLink.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BloodRequest model)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var profile = await _context.CoordinatorProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (profile != null && !profile.IsApproved)
+            {
+                TempData["Error"] = "Your Hospital Coordinator account is pending administrative accreditation and approval. You cannot publish requisitions yet.";
+                return RedirectToAction("Index", "Home");
+            }
+
             if (ModelState.IsValid)
             {
-                model.CoordinatorId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+                model.CoordinatorId = userId;
                 model.Status = RequestStatus.Open;
                 model.CreatedAt = DateTime.UtcNow;
 

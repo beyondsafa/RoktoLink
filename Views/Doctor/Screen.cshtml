@@ -1,0 +1,199 @@
+@model RoktoLink.Models.MedicalScreening
+
+@{
+    ViewData["Title"] = "Clinical Evaluation";
+    var doctor = ViewBag.DoctorProfile as RoktoLink.Models.DoctorProfile;
+    bool isPending = Model.Status == RoktoLink.Models.Enums.ScreeningStatus.Pending;
+}
+
+<div class="py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-medical me-2"></i> Clinical Pre-Donation Screening</h5>
+                    <span class="badge bg-light text-dark">Screening #@Model.Id</span>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Donor & Requisition Summary -->
+                    <div class="p-3 bg-light rounded-3 mb-4 border">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <span class="text-muted small d-block">Volunteering Donor</span>
+                                <strong class="fs-5">@Model.Donor?.User?.FullName</strong>
+                                <span class="badge bg-danger ms-2">@Model.Donor?.BloodType</span>
+                                <p class="text-muted small mb-0 mt-1"><i class="bi bi-geo-alt"></i> @Model.Donor?.District</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <span class="text-muted small d-block">Target Hospital Requisition</span>
+                                <strong>#@Model.RequestId — @Model.Request?.Hospital</strong>
+                                <p class="text-muted small mb-0 mt-1">Patient: @Model.Request?.PatientName (@Model.Request?.UnitsNeeded unit(s) needed)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!isPending)
+                    {
+                        <div class="alert @(Model.Status == RoktoLink.Models.Enums.ScreeningStatus.Approved ? "alert-success" : "alert-danger") shadow-sm mb-4">
+                            <h6 class="alert-heading fw-bold mb-1">
+                                Evaluation Completed: @Model.Status
+                            </h6>
+                            <p class="mb-0 small">
+                                Evaluated on @Model.ScreenedAt?.ToString("f") by Dr. @(Model.Doctor?.User?.FullName ?? "Staff Doctor") (BMDC: @(Model.Doctor?.BMDCRegistrationNumber ?? "Verified")).
+                            </p>
+                        </div>
+                    }
+
+                    <form asp-action="Screen" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <h6 class="fw-bold text-danger border-bottom pb-2 mb-3">1. Vital Signs & Laboratory Parameters</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="WeightKg" class="form-label fw-semibold">Donor Body Weight (kg) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    @if (isPending)
+                                    {
+                                        <input asp-for="WeightKg" class="form-control" type="number" step="0.5" min="30" max="200" required />
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="WeightKg" class="form-control" type="number" step="0.5" readonly />
+                                    }
+                                    <span class="input-group-text">kg (Min 45 kg)</span>
+                                </div>
+                                <span asp-validation-for="WeightKg" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="HemoglobinLevel" class="form-label fw-semibold">Hemoglobin Level (g/dL) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    @if (isPending)
+                                    {
+                                        <input asp-for="HemoglobinLevel" class="form-control" type="number" step="0.1" min="5" max="25" required />
+                                    }
+                                    else
+                                    {
+                                        <input asp-for="HemoglobinLevel" class="form-control" type="number" step="0.1" readonly />
+                                    }
+                                    <span class="input-group-text">g/dL (Min 12.5)</span>
+                                </div>
+                                <span asp-validation-for="HemoglobinLevel" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="SystolicBP" class="form-label fw-semibold">Systolic Blood Pressure (mmHg)</label>
+                                @if (isPending)
+                                {
+                                    <input asp-for="SystolicBP" class="form-control" type="number" min="70" max="220" required />
+                                }
+                                else
+                                {
+                                    <input asp-for="SystolicBP" class="form-control" type="number" readonly />
+                                }
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DiastolicBP" class="form-label fw-semibold">Diastolic Blood Pressure (mmHg)</label>
+                                @if (isPending)
+                                {
+                                    <input asp-for="DiastolicBP" class="form-control" type="number" min="40" max="130" required />
+                                }
+                                else
+                                {
+                                    <input asp-for="DiastolicBP" class="form-control" type="number" readonly />
+                                }
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-danger border-bottom pb-2 mb-3">2. Clinical Safety & Medical Contraindications</h6>
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                @if (isPending)
+                                {
+                                    <input class="form-check-input" type="checkbox" asp-for="HasNoRecentInfection" />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" asp-for="HasNoRecentInfection" disabled />
+                                }
+                                <label class="form-check-label" asp-for="HasNoRecentInfection">
+                                    Donor confirms no active viral infection, respiratory fever, or antibiotic use within the past 14 days.
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-2">
+                                @if (isPending)
+                                {
+                                    <input class="form-check-input" type="checkbox" asp-for="HasNoRecentTattooOrSurgery" />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" asp-for="HasNoRecentTattooOrSurgery" disabled />
+                                }
+                                <label class="form-check-label" asp-for="HasNoRecentTattooOrSurgery">
+                                    Donor confirms no major surgery, dental extraction, or body tattoo/piercing within the past 6 months.
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                @if (isPending)
+                                {
+                                    <input class="form-check-input" type="checkbox" asp-for="CooldownConfirmed" />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" asp-for="CooldownConfirmed" disabled />
+                                }
+                                <label class="form-check-label" asp-for="CooldownConfirmed">
+                                    Medical 90-day whole blood recovery cooldown verified.
+                                </label>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-danger border-bottom pb-2 mb-3">3. Attending Doctor Remarks & BMDC Authorization</h6>
+                        <div class="mb-4">
+                            <label asp-for="DoctorRemarks" class="form-label fw-semibold">Clinical Notes / Clearance Remarks</label>
+                            @if (isPending)
+                            {
+                                <textarea asp-for="DoctorRemarks" class="form-control" rows="3" placeholder="Enter clinical assessment notes, pulse rate, or reason for postponement..."></textarea>
+                            }
+                            else
+                            {
+                                <textarea asp-for="DoctorRemarks" class="form-control" rows="3" readonly></textarea>
+                            }
+                        </div>
+
+                        @if (doctor != null)
+                        {
+                            <div class="p-3 border rounded-3 bg-light mb-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted d-block">Attending Medical Officer</small>
+                                    <strong>Dr. @doctor.User?.FullName</strong> &bull; <span class="text-secondary">@doctor.MedicalCollege</span>
+                                </div>
+                                <span class="badge bg-success font-monospace p-2">BMDC: @doctor.BMDCRegistrationNumber</span>
+                            </div>
+                        }
+
+                        @if (isPending)
+                        {
+                            <div class="d-flex gap-3">
+                                <button type="submit" name="decision" value="Approve" class="btn btn-success flex-grow-1 py-2 fw-bold" onclick="return confirm('Approve this donor for blood donation and unlock contact information for the hospital coordinator?');">
+                                    <i class="bi bi-check-circle me-1"></i> Approve & Unlock Contact
+                                </button>
+                                <button type="submit" name="decision" value="Reject" class="btn btn-outline-danger py-2" onclick="return confirm('Mark this donor as clinically rejected for this request?');">
+                                    <i class="bi bi-x-circle me-1"></i> Reject (Contraindicated)
+                                </button>
+                                <a asp-action="TriageQueue" class="btn btn-secondary py-2">Back to Queue</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <a asp-action="TriageQueue" class="btn btn-secondary w-100 py-2">Return to Triage Queue</a>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

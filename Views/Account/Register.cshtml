@@ -1,48 +1,128 @@
 @model RoktoLink.Controllers.RegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Create an Account";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">Register as a Donor</h3>
+<div class="row justify-content-center py-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-danger text-white text-center py-3">
+                <h4 class="mb-0 fw-bold">Join RoktoLink</h4>
+                <small>Register as a Blood Donor, Hospital Coordinator, or Volunteer Doctor</small>
+            </div>
+            <div class="card-body p-4">
                 <form method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    
-                    <div class="mb-3">
-                        <label asp-for="FullName" class="form-label"></label>
-                        <input asp-for="FullName" class="form-control" />
-                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Your Role:</label>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="Role" id="roleDonor" value="Donor" checked autocomplete="off" onchange="toggleRoleFields()">
+                                <label class="btn btn-outline-danger w-100 py-2 fw-semibold" for="roleDonor">
+                                    <i class="bi bi-heart-pulse me-1 d-block mb-1 fs-5"></i> Donor
+                                </label>
+                            </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="Role" id="roleCoordinator" value="Coordinator" autocomplete="off" onchange="toggleRoleFields()">
+                                <label class="btn btn-outline-warning text-dark w-100 py-2 fw-semibold" for="roleCoordinator">
+                                    <i class="bi bi-building me-1 d-block mb-1 fs-5 text-warning"></i> Coordinator
+                                </label>
+                            </div>
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="Role" id="roleDoctor" value="Doctor" autocomplete="off" onchange="toggleRoleFields()">
+                                <label class="btn btn-outline-primary w-100 py-2 fw-semibold" for="roleDoctor">
+                                    <i class="bi bi-hospital me-1 d-block mb-1 fs-5"></i> Doctor
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
-                        <input asp-for="Email" class="form-control" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
+                        <label asp-for="FullName" class="form-label fw-semibold"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="e.g. Dr. Tanvir Ahmed or Sadia Rahman" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="District" class="form-label"></label>
-                        <input asp-for="District" class="form-control" />
-                        <span asp-validation-for="District" class="text-danger"></span>
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="name@domain.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" class="form-control" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <label asp-for="District" class="form-label fw-semibold">District / Area in Dhaka</label>
+                        <input asp-for="District" class="form-control" placeholder="e.g. Dhanmondi, Dhaka or Mirpur, Dhaka" />
+                        <span asp-validation-for="District" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="ConfirmPassword" class="form-label"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    <!-- Coordinator Specific Fields (Visible when Coordinator is selected) -->
+                    <div id="coordinatorFields" class="p-3 bg-light rounded-3 mb-3 border border-warning border-opacity-50" style="display: none;">
+                        <h6 class="fw-bold text-warning text-dark mb-3"><i class="bi bi-building-check me-1"></i> Hospital & Institutional Accreditation</h6>
+
+                        <div class="mb-3">
+                            <label asp-for="HospitalName" class="form-label fw-semibold">Hospital / Blood Bank / Clinic Name <span class="text-danger">*</span></label>
+                            <input asp-for="HospitalName" class="form-control" placeholder="e.g. Dhaka Medical College Hospital (DMCH)" />
+                            <span asp-validation-for="HospitalName" class="text-danger small d-block"></span>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label asp-for="HospitalDesignation" class="form-label fw-semibold">Department / Designation</label>
+                                <input asp-for="HospitalDesignation" class="form-control" placeholder="e.g. Blood Bank Coordinator, Transfusion Unit" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HospitalStaffId" class="form-label fw-semibold">Staff ID / Accreditation No.</label>
+                                <input asp-for="HospitalStaffId" class="form-control" placeholder="e.g. DMCH-BB-4029" />
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-2">Note: Institutional accounts undergo administrative accreditation before blood requisitions can be published.</small>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Register</button>
+                    <!-- Doctor Specific BMDC Fields (Visible when Doctor is selected) -->
+                    <div id="doctorFields" class="p-3 bg-light rounded-3 mb-3 border border-primary border-opacity-25" style="display: none;">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-patch-check me-1"></i> Official BMDC Registration Verification</h6>
+
+                        <div class="mb-3">
+                            <label asp-for="BMDCRegistrationNumber" class="form-label fw-semibold">BMDC Registration Number <span class="text-danger">*</span></label>
+                            <input asp-for="BMDCRegistrationNumber" class="form-control font-monospace" placeholder="e.g. A-89214" />
+                            <small class="text-muted">Must be an active registration recognized by the Bangladesh Medical and Dental Council.</small>
+                            <span asp-validation-for="BMDCRegistrationNumber" class="text-danger small d-block"></span>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label asp-for="MedicalCollege" class="form-label fw-semibold">Medical College Affiliation</label>
+                                <input asp-for="MedicalCollege" class="form-control" placeholder="e.g. Dhaka Medical College" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Designation" class="form-label fw-semibold">Designation / Department</label>
+                                <input asp-for="Designation" class="form-control" placeholder="e.g. Medical Officer, Transfusion Med" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label fw-semibold"></label>
+                            <input asp-for="Password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-danger py-2 fw-bold fs-6">Complete Registration</button>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Already have an account?</span>
+                        <a asp-action="Login" class="text-danger fw-semibold text-decoration-none">Sign In</a>
                     </div>
                 </form>
             </div>
@@ -52,4 +132,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleRoleFields() {
+            var isDoctor = document.getElementById('roleDoctor').checked;
+            var isCoordinator = document.getElementById('roleCoordinator').checked;
+
+            document.getElementById('doctorFields').style.display = isDoctor ? 'block' : 'none';
+            document.getElementById('coordinatorFields').style.display = isCoordinator ? 'block' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', toggleRoleFields);
+    </script>
 }

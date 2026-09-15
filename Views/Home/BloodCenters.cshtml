@@ -1,0 +1,91 @@
+@model IEnumerable<RoktoLink.Models.ViewModels.BloodCenterViewModel>
+
+@{
+    ViewData["Title"] = "Verified Blood Centers (Dhaka)";
+    var selectedArea = ViewBag.SelectedArea as string;
+    var areas = new[] { "All", "Mohammadpur", "Shantinagar", "Shahbagh", "Eskaton", "Rajarbagh" };
+}
+
+<div class="py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-danger"><i class="bi bi-hospital"></i> Verified Blood Centers & Emergency Hotlines</h2>
+            <p class="text-muted mb-0">Official institutional blood banks, transfusion labs, and emergency donor networks in Dhaka.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <span class="badge bg-danger p-2 fs-6"><i class="bi bi-telephone-fill"></i> Dhaka Emergency Helpline</span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-0 bg-light">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label class="fw-bold">Filter by Area in Dhaka:</label>
+                </div>
+                <div class="col-auto">
+                    <div class="btn-group" role="group">
+                        @foreach (var a in areas)
+                        {
+                            var isSelected = (string.IsNullOrEmpty(selectedArea) && a == "All") || selectedArea == a;
+                            <a asp-action="BloodCenters" asp-route-area="@(a == "All" ? "" : a)"
+                               class="btn btn-sm @(isSelected ? "btn-danger" : "btn-outline-secondary")">
+                                @a
+                            </a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        @foreach (var center in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0 border-top border-4 border-danger">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">@center.Area, Dhaka</span>
+                            <span class="badge bg-success-subtle text-success"><i class="bi bi-clock"></i> @center.OperatingHours</span>
+                        </div>
+
+                        <h5 class="card-title fw-bold text-dark mb-1">@center.Name</h5>
+                        <p class="text-muted small mb-3">@center.Organization</p>
+
+                        <div class="mb-3">
+                            <p class="mb-1 text-secondary">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i><strong>Address:</strong> @center.Address
+                            </p>
+                            <p class="mb-1 text-secondary">
+                                <i class="bi bi-activity text-danger me-1"></i><strong>Services:</strong> <small class="text-muted">@center.AvailableServices</small>
+                            </p>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 mb-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-danger"><i class="bi bi-telephone-fill me-1"></i> Emergency Hotline:</span>
+                                <a href="tel:@center.EmergencyHotline.Replace("-", "").Trim()" class="btn btn-danger btn-sm fw-bold px-3">
+                                    @center.EmergencyHotline
+                                </a>
+                            </div>
+                            @if (!string.IsNullOrEmpty(center.Landline))
+                            {
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted small"><i class="bi bi-telephone me-1"></i> Landline:</span>
+                                    <span class="small font-monospace">@center.Landline</span>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="https://www.google.com/maps/search/?api=1&query=@center.GoogleMapsQuery" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
+                                Open in Maps
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

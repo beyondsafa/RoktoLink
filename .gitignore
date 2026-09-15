@@ -432,3 +432,5 @@ FodyWeavers.xsd
 *.db-wal
 
 PROJECT_REPORT.md
+CREDENTIALS.md
+*credentials*.md

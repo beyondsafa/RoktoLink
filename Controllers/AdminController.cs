@@ -54,6 +54,8 @@ namespace RoktoLink.Controllers
             ViewBag.UserRoles = userRoles;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
+            ViewBag.DoctorProfiles = await _context.DoctorProfiles.Include(d => d.User).ToListAsync();
+            ViewBag.CoordinatorProfiles = await _context.CoordinatorProfiles.Include(c => c.User).ToListAsync();
 
             return View(users);
         }
@@ -70,6 +72,36 @@ namespace RoktoLink.Controllers
             await _userManager.AddToRoleAsync(user, newRole);
 
             TempData["Success"] = $"Role for {user.FullName} changed to {newRole}.";
+            return RedirectToAction(nameof(Users));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyDoctor(int doctorProfileId)
+        {
+            var doctor = await _context.DoctorProfiles.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == doctorProfileId);
+            if (doctor == null) return NotFound();
+
+            doctor.IsBMDCVerified = true;
+            doctor.VerifiedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"BMDC Registration for Dr. {doctor.User?.FullName} (Reg: {doctor.BMDCRegistrationNumber}) verified successfully.";
+            return RedirectToAction(nameof(Users));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveCoordinator(int coordinatorProfileId)
+        {
+            var coordinator = await _context.CoordinatorProfiles.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == coordinatorProfileId);
+            if (coordinator == null) return NotFound();
+
+            coordinator.IsApproved = true;
+            coordinator.ApprovedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Hospital coordinator account for {coordinator.User?.FullName} ({coordinator.HospitalName}) approved successfully.";
             return RedirectToAction(nameof(Users));
         }
 

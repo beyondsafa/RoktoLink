@@ -1,73 +1,224 @@
 @model IEnumerable<RoktoLink.Models.ApplicationUser>
 
 @{
-    ViewData["Title"] = "User Management";
+    ViewData["Title"] = "User & Role Management";
     var userRoles = ViewBag.UserRoles as Dictionary<string, string>;
+    var doctors = ViewBag.DoctorProfiles as IEnumerable<RoktoLink.Models.DoctorProfile>;
+    var coordinators = ViewBag.CoordinatorProfiles as IEnumerable<RoktoLink.Models.CoordinatorProfile>;
     int currentPage = ViewBag.CurrentPage;
     int totalPages = ViewBag.TotalPages;
 }
 
-<h2 class="mb-4">User Management</h2>
+<div class="py-4">
+    <h2 class="mb-4 fw-bold text-dark">Institutional Credentials & User Management</h2>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>District</th>
-                        <th>Role</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
-                        var role = userRoles?[user.Id] ?? "Unknown";
-                        <tr>
-                            <td>@user.FullName</td>
-                            <td>@user.Email</td>
-                            <td>@user.District</td>
-                            <td>
-                                <span class="badge bg-@(role == "Admin" ? "danger" : role == "Coordinator" ? "warning text-dark" : "info text-dark")">@role</span>
-                            </td>
-                            <td>
-                                <form asp-action="ChangeRole" method="post" class="d-flex gap-2">
-                                    <input type="hidden" name="userId" value="@user.Id" />
-                                    <select name="newRole" class="form-select form-select-sm" style="width: auto;">
-                                        <option value="Donor" selected="@(role == "Donor")">Donor</option>
-                                        <option value="Coordinator" selected="@(role == "Coordinator")">Coordinator</option>
-                                        <option value="Admin" selected="@(role == "Admin")">Admin</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-primary btn-sm">Change</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <!-- Hospital Coordinator Accreditation Panel -->
+    <div class="card shadow-sm border-0 mb-5 border-top border-4 border-warning">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-building-check me-2"></i> Hospital Coordinator Accreditation</h5>
+            <span class="badge bg-dark text-white">@(coordinators?.Count() ?? 0) Coordinator(s)</span>
         </div>
-        
-        @if (totalPages > 1)
-        {
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Users" asp-route-page="@(currentPage - 1)">Previous</a>
-                    </li>
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(currentPage == i ? "active" : "")">
-                            <a class="page-link" asp-action="Users" asp-route-page="@i">@i</a>
+        <div class="card-body">
+            @if (coordinators != null && coordinators.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Coordinator Name</th>
+                                <th>Email</th>
+                                <th>Hospital / Institution</th>
+                                <th>Department</th>
+                                <th>Staff ID</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var coord in coordinators)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@coord.User?.FullName</td>
+                                    <td>@coord.User?.Email</td>
+                                    <td><span class="badge bg-light text-dark border">@coord.HospitalName</span></td>
+                                    <td>@coord.Department</td>
+                                    <td><span class="font-monospace text-muted small">@(string.IsNullOrEmpty(coord.StaffId) ? "N/A" : coord.StaffId)</span></td>
+                                    <td>
+                                        @if (coord.IsApproved)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Approved</span>
+                                            <small class="d-block text-muted">@coord.ApprovedAt?.ToShortDateString()</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Pending Approval</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!coord.IsApproved)
+                                        {
+                                            <form asp-action="ApproveCoordinator" method="post" class="d-inline">
+                                                <input type="hidden" name="coordinatorProfileId" value="@coord.Id" />
+                                                <button type="submit" class="btn btn-warning text-dark btn-sm fw-semibold" onclick="return confirm('Approve hospital coordinator account for @coord.User?.FullName (@coord.HospitalName)?');">
+                                                    <i class="bi bi-check-lg"></i> Approve Coordinator
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success small fw-semibold"><i class="bi bi-check2-all"></i> Active</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0 small">No hospital coordinators registered.</p>
+            }
+        </div>
+    </div>
+
+    <!-- BMDC Doctor Credential Verification Panel -->
+    <div class="card shadow-sm border-0 mb-5 border-top border-4 border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-patch-check-fill me-2"></i> Volunteer Doctor BMDC Verification</h5>
+            <span class="badge bg-light text-dark">@(doctors?.Count() ?? 0) Registered Doctor(s)</span>
+        </div>
+        <div class="card-body">
+            @if (doctors != null && doctors.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Doctor Name</th>
+                                <th>Email</th>
+                                <th>BMDC Reg. No.</th>
+                                <th>Affiliation / College</th>
+                                <th>Designation</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var doc in doctors)
+                            {
+                                <tr>
+                                    <td class="fw-bold">Dr. @doc.User?.FullName</td>
+                                    <td>@doc.User?.Email</td>
+                                    <td><span class="badge bg-secondary font-monospace">@doc.BMDCRegistrationNumber</span></td>
+                                    <td>@doc.MedicalCollege</td>
+                                    <td>@doc.Designation</td>
+                                    <td>
+                                        @if (doc.IsBMDCVerified)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Verified</span>
+                                            <small class="d-block text-muted">@doc.VerifiedAt?.ToShortDateString()</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Verification Pending</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!doc.IsBMDCVerified)
+                                        {
+                                            <form asp-action="VerifyDoctor" method="post" class="d-inline">
+                                                <input type="hidden" name="doctorProfileId" value="@doc.Id" />
+                                                <button type="submit" class="btn btn-success btn-sm fw-semibold" onclick="return confirm('Verify BMDC registration for Dr. @doc.User?.FullName?');">
+                                                    Verify BMDC
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success small fw-semibold"><i class="bi bi-check2-all"></i> Active</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0 small">No volunteer doctors currently registered.</p>
+            }
+        </div>
+    </div>
+
+    <!-- General User Role Management -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i> All System Accounts</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>District / Area</th>
+                            <th>Role</th>
+                            <th>Change Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            var role = userRoles?[user.Id] ?? "Unknown";
+                            <tr>
+                                <td class="fw-semibold">@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td>@user.District</td>
+                                <td>
+                                    <span class="badge bg-@(role == "Admin" ? "danger" : role == "Coordinator" ? "warning text-dark" : role == "Doctor" ? "primary" : "info text-dark")">
+                                        @role
+                                    </span>
+                                </td>
+                                <td>
+                                    <form asp-action="ChangeRole" method="post" class="d-flex gap-2">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <select name="newRole" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="Donor" selected="@(role == "Donor")">Donor</option>
+                                            <option value="Doctor" selected="@(role == "Doctor")">Doctor</option>
+                                            <option value="Coordinator" selected="@(role == "Coordinator")">Coordinator</option>
+                                            <option value="Admin" selected="@(role == "Admin")">Admin</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Users" asp-route-page="@(currentPage - 1)">Previous</a>
                         </li>
-                    }
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Users" asp-route-page="@(currentPage + 1)">Next</a>
-                    </li>
-                </ul>
-            </nav>
-        }
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(currentPage == i ? "active" : "")">
+                                <a class="page-link" asp-action="Users" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Users" asp-route-page="@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
     </div>
 </div>
